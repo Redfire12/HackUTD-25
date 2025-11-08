@@ -18,3 +18,31 @@
 2025-11-08 16:48:51,396 | INFO | GET /insights/current -> 200 [0.000s]
 2025-11-08 16:50:53,186 | INFO | GET /docs -> 200 [0.001s]
 2025-11-08 16:50:53,311 | INFO | GET /openapi.json -> 200 [0.004s]
+2025-11-08 16:58:38,542 | INFO | Root endpoint accessed
+2025-11-08 16:58:38,545 | INFO | GET / -> 200 [0.003s]
+2025-11-08 16:58:41,765 | INFO | GET /docs -> 200 [0.000s]
+2025-11-08 16:58:41,894 | INFO | GET /openapi.json -> 200 [0.003s]
+2025-11-08 16:58:44,653 | INFO | Root endpoint accessed
+2025-11-08 16:58:44,653 | INFO | GET / -> 200 [0.001s]
+2025-11-08 16:58:48,727 | INFO | /insights/current accessed
+2025-11-08 16:58:48,727 | INFO | GET /insights/current -> 200 [0.001s]
+2025-11-08 16:58:50,290 | INFO | /insights/current accessed
+2025-11-08 16:58:50,291 | INFO | GET /insights/current -> 200 [0.002s]
+2025-11-08 16:58:51,456 | INFO | /insights/current accessed
+2025-11-08 16:58:51,456 | INFO | GET /insights/current -> 200 [0.001s]
+2025-11-08 16:59:06,022 | INFO | OPTIONS /analyze -> 200 [0.000s]
+2025-11-08 16:59:06,043 | INFO | /analyze: text='I genuinely hate my engineers....' | sentiment=-0.8 | label=negative
+2025-11-08 16:59:06,043 | INFO | POST /analyze -> 200 [0.019s]
+2025-11-08 17:00:21,612 | INFO | /analyze: text='I genuinely love my engineers....' | sentiment=0.5 | label=positive
+2025-11-08 17:00:21,614 | INFO | POST /analyze -> 200 [0.004s]
+2025-11-08 17:00:26,528 | INFO | OPTIONS /generate-story -> 200 [0.000s]
+2025-11-08 17:00:26,530 | INFO | /generate-story: mock story generated for text='I genuinely love my engineers....'
+2025-11-08 17:00:26,530 | INFO | POST /generate-story -> 200 [0.001s]
+2025-11-08 17:00:28,945 | INFO | /insights/current accessed
+2025-11-08 17:00:28,946 | INFO | GET /insights/current -> 200 [0.002s]
+2025-11-08 17:01:38,122 | INFO | /analyze: text='My engineers do a great job ...' | sentiment=0.8 | label=positive
+2025-11-08 17:01:38,123 | INFO | POST /analyze -> 200 [0.006s]
+2025-11-08 17:01:39,525 | INFO | /generate-story: mock story generated for text='My engineers do a great job ...'
+2025-11-08 17:01:39,525 | INFO | POST /generate-story -> 200 [0.002s]
+2025-11-08 17:01:43,538 | INFO | /insights/current accessed
+2025-11-08 17:01:43,538 | INFO | GET /insights/current -> 200 [0.000s]
