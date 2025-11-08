@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+textblob
+pydantic[dotenv]
+openai
+scikit-learn
