@@ -1,0 +1,44 @@
+[
+    {
+        "id": 1,
+        "timestamp": "2025-11-08T10:24:00",
+        "source": "App Store",
+        "text": "Love the new design! The dashboard feels faster and cleaner.",
+        "sentiment": "positive"
+    },
+    {
+        "id": 2,
+        "timestamp": "2025-11-08T10:30:00",
+        "source": "Twitter",
+        "text": "Billing keeps failing every month — super frustrating.",
+        "sentiment": "negative"
+    },
+    {
+        "id": 3,
+        "timestamp": "2025-11-08T10:45:00",
+        "source": "Support Chat",
+        "text": "Login feature broke after the latest update.",
+        "sentiment": "negative"
+    },
+    {
+        "id": 4,
+        "timestamp": "2025-11-08T11:00:00",
+        "source": "Email",
+        "text": "Customer support was really helpful and quick to respond.",
+        "sentiment": "positive"
+    },
+    {
+        "id": 5,
+        "timestamp": "2025-11-08T11:30:00",
+        "source": "Twitter",
+        "text": "Would love a dark mode option soon.",
+        "sentiment": "neutral"
+    },
+    {
+        "id": 6,
+        "timestamp": "2025-11-08T11:45:00",
+        "source": "App Store",
+        "text": "Still seeing random crashes on Android 14.",
+        "sentiment": "negative"
+    }
+]
