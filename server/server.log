@@ -6,3 +6,15 @@
 2025-11-08 16:14:46,897 | INFO | GET / -> 200 [0.004s]
 2025-11-08 16:14:51,489 | INFO | GET /docs -> 200 [0.000s]
 2025-11-08 16:14:51,673 | INFO | GET /openapi.json -> 200 [0.008s]
+2025-11-08 16:45:03,979 | INFO | Root endpoint accessed
+2025-11-08 16:45:03,982 | INFO | GET / -> 200 [0.013s]
+2025-11-08 16:48:36,863 | INFO | OPTIONS /generate-story -> 200 [0.000s]
+2025-11-08 16:48:36,865 | INFO | /generate-story: mock story generated for text='I love the new layout, but the checkout ...'
+2025-11-08 16:48:36,865 | INFO | POST /generate-story -> 200 [0.001s]
+2025-11-08 16:48:48,122 | INFO | OPTIONS /analyze -> 200 [0.000s]
+2025-11-08 16:48:48,142 | INFO | /analyze: text='I love the new layout, but the checkout ...' | sentiment=0.11212121212121211 | label=positive
+2025-11-08 16:48:48,143 | INFO | POST /analyze -> 200 [0.019s]
+2025-11-08 16:48:51,396 | INFO | /insights/current accessed
+2025-11-08 16:48:51,396 | INFO | GET /insights/current -> 200 [0.000s]
+2025-11-08 16:50:53,186 | INFO | GET /docs -> 200 [0.001s]
+2025-11-08 16:50:53,311 | INFO | GET /openapi.json -> 200 [0.004s]
