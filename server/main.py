@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from database import insert_feedback
 from pydantic import BaseModel
 from textblob import TextBlob
 import openai, os
@@ -6,7 +7,7 @@ import openai, os
 app = FastAPI()
 
 # load OpenAI key if provided (optional for now)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # ------------------------------
 # Root check
@@ -46,10 +47,10 @@ def generate_story(feedback: Feedback):
         messages=[{"role": "user", "content": prompt}]
     )
 
-    return {"story": completion.choices[0].message["content"]} 
+    return {"story": completion.choices[0].message["content"]}  
 @app.post("/ingest")
 def ingest_feedback(feedback: dict):
-    print("Received feedback:", feedback)
+    insert_feedback(feedback)
     return {"status": "success"}
 
 # ------------------------------

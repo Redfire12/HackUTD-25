@@ -11,7 +11,8 @@
         "timestamp": "2025-11-08T10:30:00",
         "source": "Twitter",
         "text": "Billing keeps failing every month — super frustrating.",
-        "sentiment": "negative"
+        "sentiment": "negative",
+        "theme": "Theme 1"
     },
     {
         "id": 3,
@@ -40,5 +41,12 @@
         "source": "App Store",
         "text": "Still seeing random crashes on Android 14.",
         "sentiment": "negative"
+    },
+    {
+        "id": 7,
+        "timestamp": "2025-11-08T12:00:00",
+        "source": "Email",
+        "text": "My email is test.user@gmail.com and phone is 123-456-7890",
+        "sentiment": "neutral"
     }
 ]
