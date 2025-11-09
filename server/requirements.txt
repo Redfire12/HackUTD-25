@@ -1,6 +1,12 @@
 fastapi
 uvicorn
 textblob
-pydantic[dotenv]
+pydantic
+python-dotenv
+email-validator
 openai
 scikit-learn
+sqlalchemy
+python-jose[cryptography]
+bcrypt
+python-multipart

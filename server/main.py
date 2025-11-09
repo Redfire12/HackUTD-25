@@ -1,29 +1,49 @@
 from fastapi import FastAPI, Request
-from pydantic import BaseModel
-from textblob import TextBlob
 from fastapi.middleware.cors import CORSMiddleware
-import openai, os, logging
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+import logging
+from database import engine, Base
+from routes import auth, feedback
+from services.openai_service import validate_openai_key
 
 # ------------------------------------------------
-# app initialization
+# Setup and config
 # ------------------------------------------------
-app = FastAPI(title="HackUTD Backend", version="1.1.0")
+load_dotenv()
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="HackUTD Customer Feedback Dashboard API",
+    version="2.0.0",
+    description="API for analyzing customer feedback with AI-powered insights"
+)
 
 # ------------------------------------------------
-# enable CORS for frontend integration
+# CORS configuration
 # ------------------------------------------------
+default_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+cors_origins_env = os.getenv("CORS_ORIGINS", "").strip()
+if cors_origins_env:
+    allow_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+    if not allow_origins:
+        allow_origins = default_origins
+else:
+    allow_origins = default_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # allow all origins (safe for demo)
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ------------------------------------------------
-# logging configuration
-# ------------------------------------------------
+# Logging setup
 LOG_FILE = "server.log"
 logging.basicConfig(
     filename=LOG_FILE,
@@ -31,77 +51,46 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
 
+logger = logging.getLogger(__name__)
+
+# Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = datetime.now()
     response = await call_next(request)
-    process_time = (datetime.now() - start_time).total_seconds()
-    logging.info(f"{request.method} {request.url.path} -> {response.status_code} [{process_time:.3f}s]")
+    duration = (datetime.now() - start_time).total_seconds()
+    logger.info(f"{request.method} {request.url.path} -> {response.status_code} [{duration:.3f}s]")
     return response
 
-# ------------------------------------------------
-# load OpenAI key (optional for now)
-# ------------------------------------------------
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Validate OpenAI key on startup
+if validate_openai_key():
+    logger.info("OpenAI API key validated successfully")
+else:
+    logger.warning("OpenAI API key not configured. AI features will use fallbacks.")
 
 # ------------------------------------------------
-# root route
+# Include routers
+# ------------------------------------------------
+app.include_router(auth.router)
+app.include_router(feedback.router)
+
+# ------------------------------------------------
+# Root route
 # ------------------------------------------------
 @app.get("/")
 def root():
-    logging.info("Root endpoint accessed")
+    """Root endpoint to check API status."""
     return {
         "status": "ok",
-        "message": "Backend is running. Go to /docs to test endpoints."
+        "message": "HackUTD Customer Feedback Dashboard API is running",
+        "version": "2.0.0",
+        "docs": "/docs"
     }
 
 # ------------------------------------------------
-# sentiment analysis endpoint
+# Health check
 # ------------------------------------------------
-class Feedback(BaseModel):
-    text: str
-
-@app.post("/analyze")
-def analyze_feedback(feedback: Feedback):
-    sentiment = TextBlob(feedback.text).sentiment.polarity
-    label = "positive" if sentiment > 0 else "negative" if sentiment < 0 else "neutral"
-    logging.info(f"/analyze: text='{feedback.text[:40]}...' | sentiment={sentiment} | label={label}")
-    return {"sentiment": sentiment, "label": label}
-
-# ------------------------------------------------
-# AI story generation endpoint
-# ------------------------------------------------
-@app.post("/generate-story")
-def generate_story(feedback: Feedback):
-    prompt = f"Write a Jira-style user story and acceptance criteria for this feedback: {feedback.text}"
-
-    # if no OpenAI key, return mock story
-    if not openai.api_key or openai.api_key == "placeholder":
-        story = f"[mock story] As a user, I want to resolve: '{feedback.text}' so that customers are happier."
-        logging.info(f"/generate-story: mock story generated for text='{feedback.text[:40]}...'")
-        return {"story": story}
-
-    completion = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    story = completion.choices[0].message["content"]
-    logging.info(f"/generate-story: AI story generated for text='{feedback.text[:40]}...'")
-    return {"story": story}
-
-# ------------------------------------------------
-# mock insights endpoint
-# ------------------------------------------------
-@app.get("/insights/current")
-def insights():
-    logging.info("/insights/current accessed")
-    return {
-        "themes": [
-            {"name": "Billing", "sentiment": -0.6, "count": 14},
-            {"name": "Login", "sentiment": 0.4, "count": 9},
-            {"name": "Performance", "sentiment": -0.1, "count": 6}
-        ],
-        "anomalies": ["Billing spike detected"],
-        "timestamp": "2025-11-08T15:30:00Z"
-    }
+@app.get("/health")
+def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat() + "Z"}
