@@ -4,3 +4,4 @@ textblob
 pydantic[dotenv]
 openai
 scikit-learn
+sqlalchemy
