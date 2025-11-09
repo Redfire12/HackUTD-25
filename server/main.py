@@ -1,107 +1,123 @@
 from fastapi import FastAPI, Request
-from pydantic import BaseModel
-from textblob import TextBlob
 from fastapi.middleware.cors import CORSMiddleware
-import openai, os, logging
 from datetime import datetime
+from dotenv import load_dotenv
+import os
+import logging
 
 # ------------------------------------------------
-# app initialization
+# Setup and config
 # ------------------------------------------------
-app = FastAPI(title="HackUTD Backend", version="1.1.0")
+load_dotenv() 
+
+# Logging setup (must be early for error handling)
+LOG_FILE = os.getenv("LOG_FILE", "")
+if LOG_FILE:
+    logging.basicConfig(
+        filename=LOG_FILE,
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+    )
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+    )
+
+logger = logging.getLogger(__name__)
+
+# Database setup
+from database import engine, Base, ensure_feedback_table_columns
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
+ensure_feedback_table_columns()
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="HackUTD Customer Feedback Dashboard API",
+    version="2.0.0",
+    description="API for analyzing customer feedback with AI-powered insights"
+)
 
 # ------------------------------------------------
-# enable CORS for frontend integration
+# CORS configuration
 # ------------------------------------------------
+default_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+cors_origins_env = os.getenv("CORS_ORIGINS", "").strip()
+if cors_origins_env:
+    allow_origins = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+    if not allow_origins:
+        allow_origins = default_origins
+else:
+    allow_origins = default_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # allow all origins (safe for demo)
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ------------------------------------------------
-# logging configuration
-# ------------------------------------------------
-LOG_FILE = "server.log"
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-)
+# Import routes (must be after app creation for dependency injection)
+from routes import auth, feedback
 
+# Import Hugging Face service gracefully - don't fail if it has issues
+try:
+    from services.huggingface_service import validate_huggingface_key
+    HF_SERVICE_AVAILABLE = True
+except Exception as e:
+    HF_SERVICE_AVAILABLE = False
+    logger.warning(f"Could not import Hugging Face service: {e}. AI features will use fallbacks.")
+    def validate_huggingface_key():
+        return False
+
+# Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = datetime.now()
     response = await call_next(request)
-    process_time = (datetime.now() - start_time).total_seconds()
-    logging.info(f"{request.method} {request.url.path} -> {response.status_code} [{process_time:.3f}s]")
+    duration = (datetime.now() - start_time).total_seconds()
+    logger.info(f"{request.method} {request.url.path} -> {response.status_code} [{duration:.3f}s]")
     return response
 
 # ------------------------------------------------
-# load OpenAI key (optional for now)
+# Include routers (CRITICAL: Must be registered before validation)
 # ------------------------------------------------
-openai.api_key = os.getenv("OPENAI_API_KEY")
+app.include_router(auth.router)
+app.include_router(feedback.router)
+
+# Validate Hugging Face API on startup (non-blocking, after routes are registered)
+# This ensures auth routes are always available even if AI service fails
+if HF_SERVICE_AVAILABLE:
+    try:
+        if validate_huggingface_key():
+            logger.info("Hugging Face API validated successfully")
+        else:
+            logger.warning("Hugging Face API not configured. AI features will use fallbacks.")
+    except Exception as e:
+        logger.warning(f"Hugging Face API validation failed: {e}. AI features will use fallbacks.")
+else:
+    logger.warning("Hugging Face service not available. AI features will use fallbacks.")
 
 # ------------------------------------------------
-# root route
+# Root route
 # ------------------------------------------------
 @app.get("/")
 def root():
-    logging.info("Root endpoint accessed")
+    """Root endpoint to check API status."""
     return {
         "status": "ok",
-        "message": "Backend is running. Go to /docs to test endpoints."
+        "message": "HackUTD Customer Feedback Dashboard API is running",
+        "version": "2.0.0",
+        "docs": "/docs"
     }
 
 # ------------------------------------------------
-# sentiment analysis endpoint
+# Health check
 # ------------------------------------------------
-class Feedback(BaseModel):
-    text: str
-
-@app.post("/analyze")
-def analyze_feedback(feedback: Feedback):
-    sentiment = TextBlob(feedback.text).sentiment.polarity
-    label = "positive" if sentiment > 0 else "negative" if sentiment < 0 else "neutral"
-    logging.info(f"/analyze: text='{feedback.text[:40]}...' | sentiment={sentiment} | label={label}")
-    return {"sentiment": sentiment, "label": label}
-
-# ------------------------------------------------
-# AI story generation endpoint
-# ------------------------------------------------
-@app.post("/generate-story")
-def generate_story(feedback: Feedback):
-    prompt = f"Write a Jira-style user story and acceptance criteria for this feedback: {feedback.text}"
-
-    # if no OpenAI key, return mock story
-    if not openai.api_key or openai.api_key == "placeholder":
-        story = f"[mock story] As a user, I want to resolve: '{feedback.text}' so that customers are happier."
-        logging.info(f"/generate-story: mock story generated for text='{feedback.text[:40]}...'")
-        return {"story": story}
-
-    completion = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    story = completion.choices[0].message["content"]
-    logging.info(f"/generate-story: AI story generated for text='{feedback.text[:40]}...'")
-    return {"story": story}
-
-# ------------------------------------------------
-# mock insights endpoint
-# ------------------------------------------------
-@app.get("/insights/current")
-def insights():
-    logging.info("/insights/current accessed")
-    return {
-        "themes": [
-            {"name": "Billing", "sentiment": -0.6, "count": 14},
-            {"name": "Login", "sentiment": 0.4, "count": 9},
-            {"name": "Performance", "sentiment": -0.1, "count": 6}
-        ],
-        "anomalies": ["Billing spike detected"],
-        "timestamp": "2025-11-08T15:30:00Z"
-    }
+@app.get("/health")
+def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat() + "Z"}

@@ -1,9 +1,7 @@
-<<<<<<< HEAD
-__pycache__/
-=======
 # Environment variables
 .env
 .env.local
+.evn
 
 # Python
 __pycache__/
@@ -16,14 +14,6 @@ env/
 ENV/
 .venv
 
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnp
-.pnp.js
-
 # Database
 *.db
 *.sqlite
@@ -31,11 +21,7 @@ yarn-error.log*
 
 # Logs
 *.log
-
-# Build
-build/
-dist/
-*.egg-info/
+server.log
 
 # IDE
 .vscode/
@@ -47,9 +33,3 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
-
-# React build
-client/build/
-
-server/.env
->>>>>>> frontend-ui
