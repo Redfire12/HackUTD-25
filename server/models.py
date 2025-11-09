@@ -25,6 +25,7 @@ class FeedbackEntry(Base):
     sentiment = Column(Float, nullable=True)
     sentiment_label = Column(String, nullable=True)
     user_story = Column(Text, nullable=True)
+    story_metadata = Column(Text, nullable=True)
     insights = Column(Text, nullable=True)  # JSON string
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

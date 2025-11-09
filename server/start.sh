@@ -1,7 +1,27 @@
 #!/bin/bash
 
-# Activate virtual environment
-source venv/bin/activate
+# Exit on first failure
+set -e
+
+# Resolve script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Determine or create virtual environment
+if [ -d ".venv" ]; then
+  VENV_DIR=".venv"
+elif [ -d "venv" ]; then
+  VENV_DIR="venv"
+else
+  VENV_DIR=".venv"
+  echo "Creating virtual environment in $VENV_DIR ..."
+  python3 -m venv "$VENV_DIR"
+fi
+
+source "$VENV_DIR/bin/activate"
+
+echo "Installing backend dependencies..."
+pip install --disable-pip-version-check -r requirements.txt >/dev/null
 
 # Check if .env file exists
 if [ ! -f .env ]; then

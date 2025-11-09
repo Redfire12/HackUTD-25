@@ -7,25 +7,44 @@ const InsightsCard = ({ insights }) => {
                      insights?.reason ||
                      (!insights?.source && insights?.summary?.includes('unavailable'));
 
-  const themesData = insights?.themes?.map((theme) => ({
-    name: theme.name || 'Unknown',
-    sentiment: ((theme.sentiment || 0) * 100).toFixed(1),
-    count: theme.count || 1,
-  })) || [];
+  const themesData = insights?.themes?.map((theme) => {
+    let rawSentiment = 0;
+    if (typeof theme.sentiment === 'number') {
+      rawSentiment = theme.sentiment;
+    } else if (typeof theme.sentiment === 'string') {
+      const parsed = parseFloat(theme.sentiment);
+      rawSentiment = Number.isFinite(parsed) ? parsed : 0;
+    }
+    rawSentiment = Math.max(-1, Math.min(1, rawSentiment));
+
+    const count = Number.isFinite(theme.count) ? Number(theme.count) : 1;
+
+    return {
+      name: theme.name || 'Unknown',
+      rawSentiment,
+      sentimentPercent: rawSentiment * 100,
+      count: count > 0 ? count : 1,
+    };
+  }) || [];
+
+  const distributionCounts = themesData.reduce(
+    (acc, theme) => {
+      if (theme.rawSentiment > 0.1) {
+        acc.positive += theme.count;
+      } else if (theme.rawSentiment < -0.1) {
+        acc.negative += theme.count;
+      } else {
+        acc.neutral += theme.count;
+      }
+      return acc;
+    },
+    { positive: 0, neutral: 0, negative: 0 }
+  );
 
   const sentimentDistribution = [
-    {
-      name: 'Positive',
-      value: themesData.filter((t) => parseFloat(t.sentiment) > 10).length,
-    },
-    {
-      name: 'Neutral',
-      value: themesData.filter((t) => parseFloat(t.sentiment) >= -10 && parseFloat(t.sentiment) <= 10).length,
-    },
-    {
-      name: 'Negative',
-      value: themesData.filter((t) => parseFloat(t.sentiment) < -10).length,
-    },
+    { name: 'Positive', value: distributionCounts.positive },
+    { name: 'Neutral', value: distributionCounts.neutral },
+    { name: 'Negative', value: distributionCounts.negative },
   ].filter((item) => item.value > 0);
 
   const COLORS = ['#10b981', '#6b7280', '#ef4444'];
@@ -67,7 +86,7 @@ const InsightsCard = ({ insights }) => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="sentiment" fill="#0284c7" name="Sentiment Score (%)" />
+              <Bar dataKey="sentimentPercent" fill="#0284c7" name="Sentiment Score (%)" />
             </BarChart>
           </ResponsiveContainer>
         </Box>
@@ -122,14 +141,14 @@ const InsightsCard = ({ insights }) => {
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                   <Typography variant="body2" color="text.secondary">
-                    Count: {theme.count}
+                    Mentions: {theme.count}
                   </Typography>
                   <Chip
-                    label={`${theme.sentiment}%`}
+                    label={`${theme.sentimentPercent.toFixed(1)}%`}
                     color={
-                      parseFloat(theme.sentiment) > 0
+                      theme.rawSentiment > 0.1
                         ? 'success'
-                        : parseFloat(theme.sentiment) < 0
+                        : theme.rawSentiment < -0.1
                         ? 'error'
                         : 'default'
                     }

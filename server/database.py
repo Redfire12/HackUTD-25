@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
@@ -24,4 +24,17 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def ensure_feedback_table_columns():
+    """Ensure optional columns exist on feedback_entries table."""
+    if not SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+        # Rely on migrations for non-SQLite databases
+        return
+
+    with engine.connect() as conn:
+        result = conn.execute(text("PRAGMA table_info(feedback_entries);"))
+        columns = {row[1] for row in result}
+        if "story_metadata" not in columns:
+            conn.execute(text("ALTER TABLE feedback_entries ADD COLUMN story_metadata TEXT;"))
 

@@ -37,6 +37,12 @@ class FeedbackResponse(BaseModel):
     sentiment_label: Optional[str]
     user_story: Optional[str]
     insights: Optional[Dict[str, Any]]
+    story_source: Optional[str] = None
+    story_model: Optional[str] = None
+    story_reason: Optional[str] = None
+    insights_source: Optional[str] = None
+    insights_model: Optional[str] = None
+    insights_reason: Optional[str] = None
     created_at: datetime
 
     class Config:

@@ -72,6 +72,7 @@ def submit_feedback(
         sentiment=sentiment_result["sentiment"],
         sentiment_label=sentiment_result["label"],
         user_story=story_result["story"],
+        story_metadata=json.dumps(story_result),
         insights=json.dumps(insights_result)
     )
     db.add(db_entry)
@@ -88,6 +89,12 @@ def submit_feedback(
         sentiment_label=db_entry.sentiment_label,
         user_story=db_entry.user_story,
         insights=insights_result,  # Already a dict, no need to parse
+        story_source=story_result.get("source"),
+        story_model=story_result.get("model"),
+        story_reason=story_result.get("reason"),
+        insights_source=insights_result.get("source") if isinstance(insights_result, dict) else None,
+        insights_model=insights_result.get("model") if isinstance(insights_result, dict) else None,
+        insights_reason=insights_result.get("reason") if isinstance(insights_result, dict) else None,
         created_at=db_entry.created_at
     )
 
@@ -108,6 +115,12 @@ def get_feedback_history(
     
     result = []
     for entry in entries:
+        story_meta = {}
+        if entry.story_metadata:
+            try:
+                story_meta = json.loads(entry.story_metadata)
+            except json.JSONDecodeError:
+                story_meta = {}
         insights_dict = {}
         if entry.insights:
             try:
@@ -122,6 +135,12 @@ def get_feedback_history(
             sentiment_label=entry.sentiment_label,
             user_story=entry.user_story,
             insights=insights_dict,
+            story_source=story_meta.get("source"),
+            story_model=story_meta.get("model"),
+            story_reason=story_meta.get("reason"),
+            insights_source=insights_dict.get("source") if isinstance(insights_dict, dict) else None,
+            insights_model=insights_dict.get("model") if isinstance(insights_dict, dict) else None,
+            insights_reason=insights_dict.get("reason") if isinstance(insights_dict, dict) else None,
             created_at=entry.created_at
         ))
     
@@ -151,6 +170,12 @@ def get_feedback(
             insights_dict = json.loads(entry.insights) if isinstance(entry.insights, str) else entry.insights
         except json.JSONDecodeError:
             insights_dict = {}
+    story_meta = {}
+    if entry.story_metadata:
+        try:
+            story_meta = json.loads(entry.story_metadata)
+        except json.JSONDecodeError:
+            story_meta = {}
     
     return FeedbackResponse(
         id=entry.id,
@@ -159,6 +184,12 @@ def get_feedback(
         sentiment_label=entry.sentiment_label,
         user_story=entry.user_story,
         insights=insights_dict,
+        story_source=story_meta.get("source"),
+        story_model=story_meta.get("model"),
+        story_reason=story_meta.get("reason"),
+        insights_source=insights_dict.get("source") if isinstance(insights_dict, dict) else None,
+        insights_model=insights_dict.get("model") if isinstance(insights_dict, dict) else None,
+        insights_reason=insights_dict.get("reason") if isinstance(insights_dict, dict) else None,
         created_at=entry.created_at
     )
 
@@ -214,6 +245,7 @@ def update_feedback(
     entry.sentiment = sentiment_result["sentiment"]
     entry.sentiment_label = sentiment_result["label"]
     entry.user_story = story_result["story"]
+    entry.story_metadata = json.dumps(story_result)
     entry.insights = json.dumps(insights_result)
     db.commit()
     db.refresh(entry)
@@ -227,6 +259,12 @@ def update_feedback(
         sentiment_label=entry.sentiment_label,
         user_story=entry.user_story,
         insights=insights_result,
+        story_source=story_result.get("source"),
+        story_model=story_result.get("model"),
+        story_reason=story_result.get("reason"),
+        insights_source=insights_result.get("source") if isinstance(insights_result, dict) else None,
+        insights_model=insights_result.get("model") if isinstance(insights_result, dict) else None,
+        insights_reason=insights_result.get("reason") if isinstance(insights_result, dict) else None,
         created_at=entry.created_at
     )
 

@@ -4,7 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import logging
-from database import engine, Base
+from database import engine, Base, ensure_feedback_table_columns
 from routes import auth, feedback
 from services.openai_service import validate_openai_key
 
@@ -15,6 +15,7 @@ load_dotenv()
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+ensure_feedback_table_columns()
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -44,12 +45,18 @@ app.add_middleware(
 )
 
 # Logging setup
-LOG_FILE = "server.log"
-logging.basicConfig(
-    filename=LOG_FILE,
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-)
+LOG_FILE = os.getenv("LOG_FILE", "")
+if LOG_FILE:
+    logging.basicConfig(
+        filename=LOG_FILE,
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+    )
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+    )
 
 logger = logging.getLogger(__name__)
 

@@ -7,9 +7,11 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 import time
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Load environment variables
-load_dotenv()
+# Load environment variables (try local server/.env first, fallback to defaults)
+dotenv_path = Path(__file__).resolve().parent.parent / ".env"
+load_dotenv(dotenv_path if dotenv_path.exists() else None)
 
 logger = logging.getLogger(__name__)
 
