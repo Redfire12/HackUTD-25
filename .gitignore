@@ -53,3 +53,5 @@ client/build/
 
 server/.env
 >>>>>>> frontend-ui
+.env
+__pycache__/
