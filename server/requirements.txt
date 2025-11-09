@@ -4,7 +4,8 @@ textblob
 pydantic
 python-dotenv
 email-validator
-openai
+requests
+huggingface_hub
 scikit-learn
 sqlalchemy
 python-jose[cryptography]

@@ -51,9 +51,13 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
+      console.error('Login error:', error);
+      const errorMessage = error.response?.data?.detail || 
+                          error.message || 
+                          (error.code === 'ERR_NETWORK' ? 'Cannot connect to server. Make sure the backend is running on port 8000.' : 'Login failed');
       return {
         success: false,
-        error: error.response?.data?.detail || 'Login failed',
+        error: errorMessage,
       };
     }
   };
@@ -61,12 +65,16 @@ export const AuthProvider = ({ children }) => {
   const signup = async (username, email, password) => {
     try {
       await authAPI.signup({ username, email, password });
-      // Automatically login after signup
-      return await login(username, password);
+      // Return success - user should log in manually after signup
+      return { success: true };
     } catch (error) {
+      console.error('Signup error:', error);
+      const errorMessage = error.response?.data?.detail || 
+                          error.message || 
+                          (error.code === 'ERR_NETWORK' ? 'Cannot connect to server. Make sure the backend is running on port 8000.' : 'Signup failed');
       return {
         success: false,
-        error: error.response?.data?.detail || 'Signup failed',
+        error: errorMessage,
       };
     }
   };

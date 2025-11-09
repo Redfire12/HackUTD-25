@@ -4,14 +4,30 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import logging
-from database import engine, Base, ensure_feedback_table_columns
-from routes import auth, feedback
-from services.openai_service import validate_openai_key
 
 # ------------------------------------------------
 # Setup and config
 # ------------------------------------------------
-load_dotenv()
+load_dotenv() 
+
+# Logging setup (must be early for error handling)
+LOG_FILE = os.getenv("LOG_FILE", "")
+if LOG_FILE:
+    logging.basicConfig(
+        filename=LOG_FILE,
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+    )
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s",
+    )
+
+logger = logging.getLogger(__name__)
+
+# Database setup
+from database import engine, Base, ensure_feedback_table_columns
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -44,21 +60,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Logging setup
-LOG_FILE = os.getenv("LOG_FILE", "")
-if LOG_FILE:
-    logging.basicConfig(
-        filename=LOG_FILE,
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(message)s",
-    )
-else:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(message)s",
-    )
+# Import routes (must be after app creation for dependency injection)
+from routes import auth, feedback
 
-logger = logging.getLogger(__name__)
+# Import Hugging Face service gracefully - don't fail if it has issues
+try:
+    from services.huggingface_service import validate_huggingface_key
+    HF_SERVICE_AVAILABLE = True
+except Exception as e:
+    HF_SERVICE_AVAILABLE = False
+    logger.warning(f"Could not import Hugging Face service: {e}. AI features will use fallbacks.")
+    def validate_huggingface_key():
+        return False
 
 # Request logging middleware
 @app.middleware("http")
@@ -69,17 +82,24 @@ async def log_requests(request: Request, call_next):
     logger.info(f"{request.method} {request.url.path} -> {response.status_code} [{duration:.3f}s]")
     return response
 
-# Validate OpenAI key on startup
-if validate_openai_key():
-    logger.info("OpenAI API key validated successfully")
-else:
-    logger.warning("OpenAI API key not configured. AI features will use fallbacks.")
-
 # ------------------------------------------------
-# Include routers
+# Include routers (CRITICAL: Must be registered before validation)
 # ------------------------------------------------
 app.include_router(auth.router)
 app.include_router(feedback.router)
+
+# Validate Hugging Face API on startup (non-blocking, after routes are registered)
+# This ensures auth routes are always available even if AI service fails
+if HF_SERVICE_AVAILABLE:
+    try:
+        if validate_huggingface_key():
+            logger.info("Hugging Face API validated successfully")
+        else:
+            logger.warning("Hugging Face API not configured. AI features will use fallbacks.")
+    except Exception as e:
+        logger.warning(f"Hugging Face API validation failed: {e}. AI features will use fallbacks.")
+else:
+    logger.warning("Hugging Face service not available. AI features will use fallbacks.")
 
 # ------------------------------------------------
 # Root route

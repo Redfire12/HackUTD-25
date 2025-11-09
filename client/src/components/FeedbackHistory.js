@@ -222,7 +222,7 @@ const FeedbackHistory = () => {
                       <StoryCard
                         story={{
                           story: selectedFeedback.user_story,
-                              source: isFallback ? 'fallback' : (selectedFeedback.insights?.source || 'openai'),
+                              source: isFallback ? 'fallback' : (selectedFeedback.insights?.source || 'huggingface'),
                               reason: selectedFeedback.insights?.reason,
                         }}
                       />

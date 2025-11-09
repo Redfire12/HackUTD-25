@@ -27,11 +27,11 @@ pip install --disable-pip-version-check -r requirements.txt >/dev/null
 if [ ! -f .env ]; then
     echo "⚠️  Warning: .env file not found!"
     echo "Please create a .env file with the following variables:"
-    echo "  OPENAI_API_KEY=your_openai_api_key_here"
+    echo "  HUGGINGFACE_API_KEY=your_huggingface_api_key_here  # Optional"
     echo "  SECRET_KEY=your-secret-key-change-in-production"
     echo "  DATABASE_URL=sqlite:///./feedback.db"
     echo ""
-    echo "The server will start but AI features may not work without OPENAI_API_KEY."
+    echo "The server will start and AI features will use the public Hugging Face API (may have rate limits)."
     echo ""
 fi
 

@@ -54,7 +54,7 @@ class SentimentResponse(BaseModel):
 
 class StoryResponse(BaseModel):
     story: str
-    source: str  # "openai" or "fallback"
+    source: str  # "huggingface" or "fallback"
     model: Optional[str] = None
     reason: Optional[str] = None
 
@@ -62,7 +62,7 @@ class InsightsResponse(BaseModel):
     themes: List[Dict[str, Any]]
     anomalies: List[str]
     timestamp: str
-    source: str  # "openai" or "fallback"
+    source: str  # "huggingface" or "fallback"
     summary: Optional[str] = None
     model: Optional[str] = None
     reason: Optional[str] = None

@@ -74,7 +74,7 @@ const Dashboard = () => {
       
       const storyData = {
         story: storyText,
-        source: isStoryFallback ? 'fallback' : 'openai',
+        source: isStoryFallback ? 'fallback' : 'huggingface',
         reason: isStoryFallback ? 'API unavailable' : undefined,
       };
       setStory(storyData);
@@ -131,7 +131,7 @@ const Dashboard = () => {
             sx={{ mb: 3 }}
             onClose={() => setFallbackWarning(false)}
           >
-            ⚠️ Using fallback data — API quota or key issue. Please check your OpenAI API key configuration.
+            ⚠️ Using fallback data — API quota or connection issue. Please check your Hugging Face API configuration.
           </Alert>
         )}
 

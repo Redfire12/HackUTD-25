@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -18,21 +18,67 @@ const Signup = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  if (authLoading) {
+    return (
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Input validation
+    if (!username.trim()) {
+      setError('Username is required');
+      return;
+    }
+    if (username.length < 3) {
+      setError('Username must be at least 3 characters');
+      return;
+    }
+    if (!email.trim()) {
+      setError('Email is required');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    if (!password) {
+      setError('Password is required');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    
     setLoading(true);
 
-    const result = await signup(username, email, password);
-    setLoading(false);
+    try {
+      const result = await signup(username.trim(), email.trim(), password);
+      setLoading(false);
 
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setError(result.error || 'Signup failed');
+      if (result.success) {
+        // After successful signup, redirect to login page
+        navigate('/login', { state: { message: 'Account created successfully! Please sign in.' } });
+      } else {
+        setError(result.error || 'Signup failed');
+      }
+    } catch (err) {
+      setLoading(false);
+      setError('An unexpected error occurred. Please try again.');
     }
   };
 

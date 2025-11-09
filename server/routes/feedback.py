@@ -6,7 +6,7 @@ from models import User, FeedbackEntry
 from schemas import FeedbackCreate, FeedbackResponse, SentimentResponse, StoryResponse, InsightsResponse
 from auth import get_current_user
 from services.sentiment import analyze_sentiment
-from services.openai_service import generate_story_with_retry, generate_insights_with_retry
+from services.huggingface_service import generate_story_with_retry, generate_insights_with_retry
 import json
 import logging
 
